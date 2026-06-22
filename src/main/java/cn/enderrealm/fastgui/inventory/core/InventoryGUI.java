@@ -206,6 +206,68 @@ public class InventoryGUI {
     }
 
     /**
+     * 更新指定格子的物品（保持原有权限和处理器）
+     * 用于动态刷新 GUI 内容，不会关闭 GUI
+     *
+     * @param slot 格子索引
+     * @param item 新的物品
+     */
+    public void updateSlot(int slot, ItemStack item) {
+        if (slot < 0 || slot >= config.getSize()) {
+            throw new IllegalArgumentException("Slot 索引超出范围: " + slot);
+        }
+        slotItems.put(slot, item);
+        inventory.setItem(slot, item);
+    }
+
+    /**
+     * 更新指定格子的物品和处理器（保持原有权限）
+     * 用于动态刷新 GUI 内容，不会关闭 GUI
+     *
+     * @param slot    格子索引
+     * @param item    新的物品
+     * @param handler 新的点击处理器
+     */
+    public void updateSlot(int slot, ItemStack item, ClickHandler handler) {
+        if (slot < 0 || slot >= config.getSize()) {
+            throw new IllegalArgumentException("Slot 索引超出范围: " + slot);
+        }
+        slotItems.put(slot, item);
+        inventory.setItem(slot, item);
+        if (handler != null) {
+            slotClickHandlers.put(slot, handler);
+        }
+    }
+
+    /**
+     * 批量更新多个格子的物品（保持原有权限和处理器）
+     * 用于动态刷新 GUI 内容，不会关闭 GUI
+     *
+     * @param items slot -> 物品 映射
+     */
+    public void updateSlots(Map<Integer, ItemStack> items) {
+        for (Map.Entry<Integer, ItemStack> entry : items.entrySet()) {
+            int slot = entry.getKey();
+            ItemStack item = entry.getValue();
+            if (slot >= 0 && slot < config.getSize()) {
+                slotItems.put(slot, item);
+                inventory.setItem(slot, item);
+            }
+        }
+    }
+
+    /**
+     * 刷新整个 GUI（重新打开给玩家）
+     * 适用于需要完全刷新的情况
+     *
+     * @param player 要刷新的玩家
+     */
+    public void refresh(Player player) {
+        player.closeInventory();
+        player.openInventory(inventory);
+    }
+
+    /**
      * 设置全局点击处理器
      *
      * @param handler 点击处理器
