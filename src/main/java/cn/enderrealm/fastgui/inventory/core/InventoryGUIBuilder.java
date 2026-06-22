@@ -24,6 +24,8 @@ public class InventoryGUIBuilder {
     private final List<SlotEntry> slots = new ArrayList<>();
     private SlotPermission containerDefaultPermission = SlotPermission.DEFAULT;
     private SlotPermission playerInventoryDefaultPermission = SlotPermission.FULL_ACCESS;
+    private SlotPermission playerHotbarPermission = null;
+    private SlotPermission playerMainPermission = null;
     private ClickHandler globalClickHandler;
     private CloseHandler closeHandler;
     private DragHandler dragHandler;
@@ -93,6 +95,81 @@ public class InventoryGUIBuilder {
     public InventoryGUIBuilder playerInventoryPermission(SlotPermission permission) {
         this.playerInventoryDefaultPermission = permission;
         return this;
+    }
+
+    /**
+     * 设置背包快捷栏默认权限
+     *
+     * @param permission 默认权限
+     * @return Builder 实例
+     */
+    public InventoryGUIBuilder playerHotbarPermission(SlotPermission permission) {
+        this.playerHotbarPermission = permission;
+        return this;
+    }
+
+    /**
+     * 设置背包主区域默认权限
+     *
+     * @param permission 默认权限
+     * @return Builder 实例
+     */
+    public InventoryGUIBuilder playerMainPermission(SlotPermission permission) {
+        this.playerMainPermission = permission;
+        return this;
+    }
+
+    /**
+     * 添加背包中的格子（带权限）
+     * 快捷栏索引：0-8
+     * 主背包索引：9-35
+     *
+     * @param index      背包中的索引（0-35）
+     * @param item       物品
+     * @param handler    点击处理器
+     * @param permission 权限
+     * @return Builder 实例
+     */
+    public InventoryGUIBuilder playerSlot(int index, ItemStack item, ClickHandler handler, SlotPermission permission) {
+        // 转换为 rawSlot 索引（需要加上容器大小，但容器大小在 build 时才知道）
+        // 使用负数标记，build 时再转换
+        slots.add(new SlotEntry(-(index + 1), item, handler, permission));
+        return this;
+    }
+
+    /**
+     * 添加背包中的格子
+     *
+     * @param index   背包中的索引（0-35）
+     * @param item    物品
+     * @param handler 点击处理器
+     * @return Builder 实例
+     */
+    public InventoryGUIBuilder playerSlot(int index, ItemStack item, ClickHandler handler) {
+        return playerSlot(index, item, handler, null);
+    }
+
+    /**
+     * 添加背包中的格子（带权限，无回调）
+     *
+     * @param index      背包中的索引（0-35）
+     * @param item       物品
+     * @param permission 权限
+     * @return Builder 实例
+     */
+    public InventoryGUIBuilder playerSlot(int index, ItemStack item, SlotPermission permission) {
+        return playerSlot(index, item, null, permission);
+    }
+
+    /**
+     * 添加背包中的格子（无点击处理器）
+     *
+     * @param index 背包中的索引（0-35）
+     * @param item  物品
+     * @return Builder 实例
+     */
+    public InventoryGUIBuilder playerSlot(int index, ItemStack item) {
+        return playerSlot(index, item, null, null);
     }
 
     /**
@@ -279,6 +356,14 @@ public class InventoryGUIBuilder {
         gui.setContainerDefaultPermission(containerDefaultPermission);
         gui.setPlayerInventoryDefaultPermission(playerInventoryDefaultPermission);
 
+        // 设置背包快捷栏和主区域的默认权限
+        if (playerHotbarPermission != null) {
+            gui.setPlayerHotbarPermission(playerHotbarPermission);
+        }
+        if (playerMainPermission != null) {
+            gui.setPlayerMainPermission(playerMainPermission);
+        }
+
         // 设置格子
         for (SlotEntry entry : slots) {
             if (entry.slot == -1) {
@@ -288,6 +373,11 @@ public class InventoryGUIBuilder {
                         gui.setSlot(i, entry.item, entry.handler, entry.permission);
                     }
                 }
+            } else if (entry.slot < 0) {
+                // 背包格子（负数标记）
+                int playerIndex = -(entry.slot + 1);
+                int rawSlot = finalSize + playerIndex;
+                gui.setSlot(rawSlot, entry.item, entry.handler, entry.permission);
             } else {
                 gui.setSlot(entry.slot, entry.item, entry.handler, entry.permission);
             }

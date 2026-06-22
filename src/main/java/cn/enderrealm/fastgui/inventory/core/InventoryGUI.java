@@ -34,6 +34,8 @@ public class InventoryGUI {
 
     private SlotPermission containerDefaultPermission = SlotPermission.DEFAULT;
     private SlotPermission playerInventoryDefaultPermission = SlotPermission.FULL_ACCESS;
+    private SlotPermission playerHotbarPermission = null;
+    private SlotPermission playerMainPermission = null;
 
     private ClickHandler globalClickHandler;
     private CloseHandler closeHandler;
@@ -110,6 +112,24 @@ public class InventoryGUI {
     }
 
     /**
+     * 设置背包快捷栏默认权限
+     *
+     * @param permission 默认权限
+     */
+    public void setPlayerHotbarPermission(SlotPermission permission) {
+        this.playerHotbarPermission = permission;
+    }
+
+    /**
+     * 设置背包主区域默认权限
+     *
+     * @param permission 默认权限
+     */
+    public void setPlayerMainPermission(SlotPermission permission) {
+        this.playerMainPermission = permission;
+    }
+
+    /**
      * 设置指定格子的物品
      *
      * @param slot       格子索引
@@ -177,8 +197,23 @@ public class InventoryGUI {
 
         // 根据区域返回默认权限
         if (slot < config.getSize()) {
+            // 容器区域
             return containerDefaultPermission;
         } else {
+            // 背包区域
+            int playerIndex = slot - config.getSize();
+            
+            // 快捷栏（0-8）
+            if (playerIndex < 9 && playerHotbarPermission != null) {
+                return playerHotbarPermission;
+            }
+            
+            // 主背包（9-35）
+            if (playerIndex >= 9 && playerMainPermission != null) {
+                return playerMainPermission;
+            }
+            
+            // 默认背包权限
             return playerInventoryDefaultPermission;
         }
     }
