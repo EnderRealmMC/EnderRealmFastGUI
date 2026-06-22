@@ -146,17 +146,19 @@ public class GUIListener implements Listener {
         boolean isMoveAction = isMoveAction(action);
 
         if (isMoveAction) {
-            // 检查是否是移动到容器区域
+            // 检查背包 slot 是否可拿走
             if (!permission.isTakeable()) {
                 event.setCancelled(true);
                 return;
             }
 
-            // 检查目标容器 slot 是否允许放入
+            // 检查是否是移动到容器区域
             if (isMoveToContainer(action)) {
-                // 获取目标 slot（Shift+点击时目标是容器中的第一个空位或相同物品堆）
-                // Bukkit 会自动处理目标，我们只需要检查背包 slot 是否可拿走
-                // 实际的放入检查会在容器 slot 的权限中处理
+                // 检查容器区域是否有任何 slot 允许放入
+                if (!canPlaceInContainer(gui)) {
+                    event.setCancelled(true);
+                    return;
+                }
             }
         }
 
@@ -166,6 +168,25 @@ public class GUIListener implements Listener {
         if (guiEvent.isCancelled()) {
             event.setCancelled(true);
         }
+    }
+
+    /**
+     * 检查容器区域是否有任何 slot 允许放入
+     *
+     * @param gui GUI 实例
+     * @return true 表示有 slot 允许放入
+     */
+    private boolean canPlaceInContainer(InventoryGUI gui) {
+        int containerSize = gui.getConfig().getSize();
+        
+        for (int i = 0; i < containerSize; i++) {
+            SlotPermission permission = gui.getSlotPermission(i);
+            if (permission.isPlaceable()) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     /**
