@@ -1,5 +1,6 @@
 package cn.enderrealm.fastgui.inventory.listener;
 
+import cn.enderrealm.fastgui.inventory.config.ContainerType;
 import cn.enderrealm.fastgui.inventory.config.SlotPermission;
 import cn.enderrealm.fastgui.inventory.core.InventoryGUI;
 import cn.enderrealm.fastgui.inventory.event.click.ClickType;
@@ -13,8 +14,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.view.AnvilView;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,8 +67,17 @@ public class GUIListener implements Listener {
         }
 
         // 创建 GUI 事件
+        AnvilView anvilView = null;
+        String renameText = null;
+        if (gui.getConfig().getType() == ContainerType.ANVIL) {
+            // 获取铁砧视图和重命名文本
+            if (event.getView() instanceof AnvilView view) {
+                anvilView = view;
+                renameText = view.getRenameText();
+            }
+        }
         InventoryClickEvent guiEvent = new InventoryClickEvent(
-                gui, player, rawSlot, clickType, event.getCurrentItem()
+                gui, player, rawSlot, clickType, event.getCurrentItem(), renameText, anvilView
         );
 
         // 根据操作类型检查权限
