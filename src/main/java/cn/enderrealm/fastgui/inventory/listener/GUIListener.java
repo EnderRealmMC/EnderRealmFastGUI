@@ -17,6 +17,7 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.view.AnvilView;
 
 import java.util.HashMap;
@@ -164,6 +165,13 @@ public class GUIListener implements Listener {
                 return;
             }
 
+            // 双击收集不能越过权限拿走顶部受保护的相同物品
+            if (action == InventoryAction.COLLECT_TO_CURSOR
+                    && containsProtectedCollectible(gui, event.getCursor())) {
+                event.setCancelled(true);
+                return;
+            }
+
             // 检查是否是移动到容器区域
             if (isMoveToContainer(action)) {
                 // 检查容器区域是否有任何 slot 允许放入
@@ -198,6 +206,30 @@ public class GUIListener implements Listener {
             }
         }
         
+        return false;
+    }
+
+    /**
+     * 检查顶部容器是否包含与鼠标物品相同且不可拿走的物品
+     *
+     * @param gui    GUI 实例
+     * @param cursor 鼠标上的物品
+     * @return true 表示双击收集可能越过权限
+     */
+    private boolean containsProtectedCollectible(InventoryGUI gui, ItemStack cursor) {
+        if (cursor == null || cursor.getType().isAir()) {
+            return false;
+        }
+
+        int containerSize = gui.getConfig().getSize();
+        for (int slot = 0; slot < containerSize; slot++) {
+            ItemStack item = gui.getSlot(slot);
+            if (item != null
+                    && item.isSimilar(cursor)
+                    && !gui.getSlotPermission(slot).isTakeable()) {
+                return true;
+            }
+        }
         return false;
     }
 

@@ -376,6 +376,9 @@ public class InventoryGUI {
             return;
         }
 
+        // 权限检查通过，允许原生操作，后续回调仍可重新取消
+        event.setCancelled(false);
+
         // 调用格子特定处理器
         ClickHandler slotHandler = slotClickHandlers.get(slot);
         if (slotHandler != null) {
@@ -404,6 +407,9 @@ public class InventoryGUI {
                 return;
             }
         }
+
+        // 所有目标格子均允许移动，后续回调仍可重新取消
+        event.setCancelled(false);
 
         // 所有 slot 都允许移动，触发回调
         if (dragHandler != null) {
