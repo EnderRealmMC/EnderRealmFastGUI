@@ -1,5 +1,6 @@
 package cn.enderrealm.fastgui.inventory.core;
 
+import cn.enderrealm.fastgui.EnderRealmFastGUI;
 import cn.enderrealm.fastgui.inventory.config.ContainerConfig;
 import cn.enderrealm.fastgui.inventory.config.ContainerFactory;
 import cn.enderrealm.fastgui.inventory.config.SlotPermission;
@@ -355,9 +356,9 @@ public class InventoryGUI {
             return;
         }
 
-        // 检查是否可拿走（当前格子有物品时）
-        if (!permission.isTakeable() && event.getCurrentItem() != null) {
-            // 不允许拿走，但可能允许点击
+        // 不允许拿走的槽位：直接触发点击回调（不依赖事件里的 currentItem，
+        // 避免客户端与服务端槽位物品不同步时回调短路导致按钮"点不动"）
+        if (!permission.isTakeable()) {
             if (permission.isClickable()) {
                 // 只触发回调，不改变取消状态
                 ClickHandler slotHandler = slotClickHandlers.get(slot);
@@ -366,6 +367,17 @@ public class InventoryGUI {
                 }
                 if (globalClickHandler != null) {
                     globalClickHandler.onClick(event);
+                }
+            }
+            // 事件已取消时，Paper 会在事件结束后发送槽位恢复包，覆盖回调内的
+            // 物品更新；延迟一 tick 重新同步，确保客户端与服务端显示一致
+            if (event.isCancelled()) {
+                ItemStack item = slotItems.get(slot);
+                if (item != null) {
+                    org.bukkit.Bukkit.getScheduler().runTask(
+                            EnderRealmFastGUI.getPlugin(),
+                            () -> inventory.setItem(slot, item)
+                    );
                 }
             }
             return;
