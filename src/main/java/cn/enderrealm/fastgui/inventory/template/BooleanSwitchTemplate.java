@@ -64,7 +64,8 @@ public class BooleanSwitchTemplate {
         this.offItem = offItem;
         render();
         gui.setSlot(slot, buildItem(), event -> {
-            boolean newValue = !value;
+            // 必须读取字段而非构造参数 value（参数遮蔽字段，lambda 捕获后永远得到初始值）
+            boolean newValue = !this.value;
             setValue(event.getPlayer(), newValue);
         });
     }
